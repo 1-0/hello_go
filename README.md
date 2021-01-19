@@ -1,2 +1,2 @@
 # hello_go
-hello go project
+hello_go - hello world project on go-lang
