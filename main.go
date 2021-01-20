@@ -1,44 +1,51 @@
 package main
- 
+
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
+	// "encoding/json"
 )
 
-// simpley http client
-func client_http(req_url, req_type string) string {
-	req, err := http.NewRequest(req_type, req_url, nil)
+/* type post struct {
+	UserId int     `json:"userId"`
+	Id  int           `json:"id"`
+	Title string  `json:"title"`
+	Body string `json:"body"`
+} */
+
+// simpley get and print post
+func printPost(reqURL string, id int) {
+
+	var url = reqURL + strconv.Itoa(id)
+	fmt.Println("url:", url)
+	resp, err := http.Get(url)
 	if err != nil {
+		fmt.Println("Error reading request. ", err)
 		log.Fatal("Error reading request. ", err)
 	}
- 
-	req.Header.Set("Cache-Control", "no-cache")
- 
-	client := &http.Client{Timeout: time.Second * 10}
- 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Error reading response. ", err)
-	}
 	defer resp.Body.Close()
- 
+	// defer resp.Close()
+	// fmt.Println("url:", url)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("Error reading body. ", err)
+		fmt.Println("Error reading response. ", err)
+		log.Fatal("Error reading response. ", err)
 	}
-	return string(body)
+	fmt.Println(string(body))
+	amt := time.Duration(rand.Intn(250))
+	time.Sleep(time.Millisecond * amt)
+	// time.Sleep(time.Second * 1)
 }
- 
+
 func main() {
-	const base_url = "https://jsonplaceholder.typicode.com/"
-	var res string
-	url := base_url + "posts"
-	r_type := "GET"
-	res = client_http(url, r_type)
-
-	fmt.Printf("%s\n", res)
+	const baseURL = "https://jsonplaceholder.typicode.com/"
+	url := baseURL + "posts/"
+	for i := 1; i <= 100; i++ {
+		printPost(url, i)
+	}
 }
-
