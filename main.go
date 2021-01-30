@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	// "math/rand"
+	"math/rand"
 	"net/http"
 	"strconv"
-	// "time"
+	"time"
 	"encoding/json"
 )
 
@@ -76,7 +76,8 @@ func getUserPosts(reqURL string, id int) []post {
 }
 
 // simpley get posts comments and print post
-func getPostComments(reqURL string, id int) []comment {
+func getPostComments(reqURL string, id int) {
+//func getPostComments(reqURL string, id int) []comment {
 	var url = reqURL + strconv.Itoa(id)
 	// fmt.Println("url:", url)
 	resp, err1 := http.Get(url)
@@ -90,7 +91,8 @@ func getPostComments(reqURL string, id int) []comment {
 	}
 	var comments []comment
 	json.Unmarshal(body, &comments)
-	return comments
+	fmt.Println("comments ", comments)
+	// return comments
 }
 
 func main() {
@@ -102,14 +104,10 @@ func main() {
 	fmt.Println("len(listIDs) ", len(listIDs))
 	for i := range listIDs {
 		fmt.Println("listIDs[i].id ", listIDs[i].Id)
-		comments := getPostComments(url2, listIDs[i].Id)
-		fmt.Println("comments ", comments)
+		go getPostComments(url2, listIDs[i].Id)
+		amt := time.Duration(rand.Intn(250))
+		time.Sleep(time.Millisecond * amt)
 	}
-	// for i := 1; i <= 100; i++ {
-	// 	go getPost(url, i)
-	// 	amt := time.Duration(rand.Intn(250))
-	// 	time.Sleep(time.Millisecond * amt)
-	// }
-	// amt2 := time.Duration(rand.Intn(20))
-	// time.Sleep(time.Second * amt2)
+	amt2 := time.Duration(rand.Intn(5))
+	time.Sleep(time.Second * amt2)
 }
