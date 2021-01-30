@@ -18,13 +18,13 @@ type post struct {
 	Body string  `json:"body"`
 }
 
-// type comment struct {
-// 	PostId int   `json:"postId"`
-// 	Id int      `json:"id"`
-// 	Name string `json:"name"`
-// 	Email string `json:"email"`
-// 	Body string  `json:"body"`
-// }
+type comment struct {
+	PostId int   `json:"postId"`
+	Id int      `json:"id"`
+	Name string `json:"name"`
+	Email string `json:"email"`
+	Body string  `json:"body"`
+}
 
 
 // simpley write post
@@ -61,6 +61,23 @@ type post struct {
 // simpley get user posts id and print post
 func getUserPosts(reqURL string, id int) []post {
 	var url = reqURL + strconv.Itoa(id)
+	resp, err1 := http.Get(url)
+	if err1 != nil {
+		log.Fatal("Error reading request. ", err1)
+	}
+	defer resp.Body.Close()
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		log.Fatal("Error reading response. ", err2)
+	}
+	var posts []post
+	json.Unmarshal(body, &posts)
+	return posts
+}
+
+// simpley get posts comments and print post
+func getPostComments(reqURL string, id int) []comment {
+	var url = reqURL + strconv.Itoa(id)
 	// fmt.Println("url:", url)
 	resp, err1 := http.Get(url)
 	if err1 != nil {
@@ -71,23 +88,23 @@ func getUserPosts(reqURL string, id int) []post {
 	if err2 != nil {
 		log.Fatal("Error reading response. ", err2)
 	}
-	// writePost(body, writePath, id)
-	// fmt.Println(string(body))
-	var posts []post
-	json.Unmarshal(body, &posts)
-	// fmt.Println("len(posts) ", len(posts))
-	// fmt.Println("posts ", posts)
-	// res := string(body)
-	return posts
+	var comments []comment
+	json.Unmarshal(body, &comments)
+	return comments
 }
 
 func main() {
 	const baseURL = "https://jsonplaceholder.typicode.com/"
 	userID := 7
 	url := baseURL + "posts?userId="
-	// url2 := baseURL + "/comments?postId="
+	url2 := baseURL + "comments?postId="
 	listIDs := getUserPosts(url, userID)
 	fmt.Println("len(listIDs) ", len(listIDs))
+	for i := range listIDs {
+		fmt.Println("listIDs[i].id ", listIDs[i].Id)
+		comments := getPostComments(url2, listIDs[i].Id)
+		fmt.Println("comments ", comments)
+	}
 	// for i := 1; i <= 100; i++ {
 	// 	go getPost(url, i)
 	// 	amt := time.Duration(rand.Intn(250))
