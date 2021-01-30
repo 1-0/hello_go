@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"strconv"
 	// "time"
-	// "encoding/json"
+	"encoding/json"
 )
 
-// type post struct {
-// 	UserId int   `json:"userId"`
-// 	Id int      `json:"id"`
-// 	Title string `json:"title"`
-// 	Body string  `json:"body"`
-// }
+type post struct {
+	UserId int   `json:"userId"`
+	Id int      `json:"id"`
+	Title string `json:"title"`
+	Body string  `json:"body"`
+}
 
 // type comment struct {
 // 	PostId int   `json:"postId"`
@@ -59,7 +59,7 @@ import (
 // }
 
 // simpley get user posts id and print post
-func getUserPostsID(reqURL string, id int) string {
+func getUserPosts(reqURL string, id int) []post {
 	var url = reqURL + strconv.Itoa(id)
 	// fmt.Println("url:", url)
 	resp, err1 := http.Get(url)
@@ -73,8 +73,12 @@ func getUserPostsID(reqURL string, id int) string {
 	}
 	// writePost(body, writePath, id)
 	// fmt.Println(string(body))
-	res := string(body)
-	return res
+	var posts []post
+	json.Unmarshal(body, &posts)
+	// fmt.Println("len(posts) ", len(posts))
+	// fmt.Println("posts ", posts)
+	// res := string(body)
+	return posts
 }
 
 func main() {
@@ -82,8 +86,8 @@ func main() {
 	userID := 7
 	url := baseURL + "posts?userId="
 	// url2 := baseURL + "/comments?postId="
-	listIDs := getUserPostsID(url, userID)
-	fmt.Println(string(listIDs))
+	listIDs := getUserPosts(url, userID)
+	fmt.Println("len(listIDs) ", len(listIDs))
 	// for i := 1; i <= 100; i++ {
 	// 	go getPost(url, i)
 	// 	amt := time.Duration(rand.Intn(250))
