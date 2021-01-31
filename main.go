@@ -12,15 +12,15 @@ import (
 )
 
 type post struct {
-	UserId int   `json:"userId"`
-	Id int      `json:"id"`
+	UserID int   `json:"userId"`
+	ID int      `json:"id"`
 	Title string `json:"title"`
 	Body string  `json:"body"`
 }
 
 type comment struct {
-	PostId int   `json:"postId"`
-	Id int      `json:"id"`
+	PostID int   `json:"postId"`
+	ID int      `json:"id"`
 	Name string `json:"name"`
 	Email string `json:"email"`
 	Body string  `json:"body"`
@@ -58,23 +58,6 @@ type comment struct {
 // 	// fmt.Println(string(body))
 // }
 
-// simpley get user posts id and print post
-func getUserPosts(reqURL string, id int) []post {
-	var url = reqURL + strconv.Itoa(id)
-	resp, err1 := http.Get(url)
-	if err1 != nil {
-		log.Fatal("Error reading request. ", err1)
-	}
-	defer resp.Body.Close()
-	body, err2 := ioutil.ReadAll(resp.Body)
-	if err2 != nil {
-		log.Fatal("Error reading response. ", err2)
-	}
-	var posts []post
-	json.Unmarshal(body, &posts)
-	return posts
-}
-
 // simpley get posts comments and print post
 func getPostComments(reqURL string, id int) {
 //func getPostComments(reqURL string, id int) []comment {
@@ -95,19 +78,55 @@ func getPostComments(reqURL string, id int) {
 	// return comments
 }
 
+// simpley get user posts id and print post
+func getUserPosts(reqURL string, id int) {
+//func getUserPosts(reqURL string, id int) []post {
+	const baseURL = "https://jsonplaceholder.typicode.com/"
+	var url = reqURL + strconv.Itoa(id)
+	resp, err1 := http.Get(url)
+	if err1 != nil {
+		log.Fatal("Error reading request. ", err1)
+	}
+	defer resp.Body.Close()
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		log.Fatal("Error reading response. ", err2)
+	}
+	var posts []post
+	json.Unmarshal(body, &posts)
+	// return posts
+	url2 := baseURL + "comments?postId="
+	fmt.Println("len(posts) ", len(posts))
+	for i := range posts {
+		fmt.Println("posts[i].id ", posts[i].ID)
+		go getPostComments(url2, posts[i].ID)
+		amt := time.Duration(rand.Intn(250))
+		time.Sleep(time.Millisecond * amt)
+	}	
+}
+
 func main() {
 	const baseURL = "https://jsonplaceholder.typicode.com/"
 	userID := 7
 	url := baseURL + "posts?userId="
-	url2 := baseURL + "comments?postId="
-	listIDs := getUserPosts(url, userID)
-	fmt.Println("len(listIDs) ", len(listIDs))
-	for i := range listIDs {
-		fmt.Println("listIDs[i].id ", listIDs[i].Id)
-		go getPostComments(url2, listIDs[i].Id)
-		amt := time.Duration(rand.Intn(250))
-		time.Sleep(time.Millisecond * amt)
-	}
-	amt2 := time.Duration(rand.Intn(5))
+	// url2 := baseURL + "comments?postId="
+	go getUserPosts(url, userID)
+	// fmt.Println("len(listIDs) ", len(listIDs))
+	// for i := range listIDs {
+	// 	fmt.Println("listIDs[i].id ", listIDs[i].Id)
+	// 	go getPostComments(url2, listIDs[i].Id)
+	// 	amt := time.Duration(rand.Intn(250))
+	// 	time.Sleep(time.Millisecond * amt)
+	// }	
+	// listIDs := getUserPosts(url, userID)
+	// fmt.Println("len(listIDs) ", len(listIDs))
+	// for i := range listIDs {
+	// 	fmt.Println("listIDs[i].id ", listIDs[i].Id)
+	// 	go getPostComments(url2, listIDs[i].Id)
+	// 	amt := time.Duration(rand.Intn(250))
+	// 	time.Sleep(time.Millisecond * amt)
+	// }
+	amt2 := time.Duration(5)
 	time.Sleep(time.Second * amt2)
+	fmt.Println("-----------------------exit--------------------")
 }
