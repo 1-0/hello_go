@@ -2,21 +2,13 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"io/ioutil"
-	// "log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
-	// "encoding/json"
 )
 
-/* type post struct {
-	UserId int     `json:"userId"`
-	Id  int           `json:"id"`
-	Title string  `json:"title"`
-	Body string `json:"body"`
-} */
+var wg sync.WaitGroup
 
 // simpley get and print post
 func printPost(reqURL string, id int) {
@@ -28,6 +20,7 @@ func printPost(reqURL string, id int) {
 		fmt.Println("Error reading request. ", err1)
 	}
 	defer resp.Body.Close()
+	defer wg.Done()
 	var body, err2 = ioutil.ReadAll(resp.Body)
 	if err2 != nil {
 		fmt.Println("Error reading response. ", err2)
@@ -39,10 +32,10 @@ func main() {
 	const baseURL = "https://jsonplaceholder.typicode.com/"
 	url := baseURL + "posts/"
 	for i := 1; i <= 100; i++ {
+		wg.Add(1)
 		go printPost(url, i)
-		amt := time.Duration(rand.Intn(250))
-		time.Sleep(time.Millisecond * amt)
 	}
-	amt2 := time.Duration(rand.Intn(20))
-	time.Sleep(time.Second * amt2*5)
+    fmt.Println("Start wait")
+	wg.Wait()
+    fmt.Println("End wait")
 }
