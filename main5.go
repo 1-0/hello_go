@@ -2,25 +2,17 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
-	// "encoding/json"
 )
 
-/* type post struct {
-	UserId int   `json:"userId"`
-	Id  int      `json:"id"`
-	Title string `json:"title"`
-	Body string  `json:"body"`
-} */
+var wg sync.WaitGroup
 
 // simpley write post
 func writePost(post []byte, path string, id int) {
-	//message := []byte("Hello, Gophers!")
 	var newFile = path + strconv.Itoa(id)
 	err := ioutil.WriteFile(newFile, post, 0644)
 	if err != nil {
@@ -35,18 +27,17 @@ func getPost(reqURL string, id int) {
 	var writePath = "./storage/posts/"
 
 	var url = reqURL + strconv.Itoa(id)
-	// fmt.Println("url:", url)
 	resp, err1 := http.Get(url)
 	if err1 != nil {
 		log.Fatal("Error reading request. ", err1)
 	}
 	defer resp.Body.Close()
+	defer wg.Done()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	if err2 != nil {
 		log.Fatal("Error reading response. ", err2)
 	}
 	writePost(body, writePath, id)
-	// fmt.Println(string(body))
 }
 
 func main() {
@@ -54,10 +45,10 @@ func main() {
 	url := baseURL + "posts/"
 	//_ = os.MkdirAll("./storage/posts/", 0770)
 	for i := 1; i <= 100; i++ {
+		wg.Add(1)
 		go getPost(url, i)
-		amt := time.Duration(rand.Intn(250))
-		time.Sleep(time.Millisecond * amt)
 	}
-	amt2 := time.Duration(rand.Intn(20))
-	time.Sleep(time.Second * amt2)
+    fmt.Println("Start wait")
+	wg.Wait()
+    fmt.Println("End wait")
 }
