@@ -3,18 +3,17 @@ package main
 import (
 	// "fmt"
 	"io/ioutil"
+	"sync"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
-	"time"
 	"encoding/json"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 const baseURL = "https://jsonplaceholder.typicode.com/"
-
+var wg sync.WaitGroup
 
 // simpley save to DB record
 var i interface {
@@ -29,6 +28,7 @@ type post struct {
 }
 
 func (p post) saveToDB() {
+	defer wg.Done()
 	db, err := sql.Open("mysql",
 		"root:2w2w2w2w2w@tcp(127.0.0.1:3306)/hello_go")
 	if err != nil {
@@ -62,6 +62,7 @@ type comment struct {
 }
 
 func (c comment) saveToDB() {
+	defer wg.Done()
 	db, err := sql.Open("mysql",
 		"root:2w2w2w2w2w@tcp(127.0.0.1:3306)/hello_go")
 	if err != nil {
@@ -94,6 +95,7 @@ func getPostComments(reqURL string, id int) {
 		log.Fatal("Error reading request. ", err1)
 	}
 	defer resp.Body.Close()
+	defer wg.Done()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	if err2 != nil {
 		log.Fatal("Error reading response. ", err2)
@@ -101,10 +103,8 @@ func getPostComments(reqURL string, id int) {
 	var comments []comment
 	json.Unmarshal(body, &comments)
 	for c := range comments{
-		// fmt.Println("comments[c].ID ", comments[c].ID)
+		wg.Add(1)
 		go comments[c].saveToDB()
-		amt := time.Duration(rand.Intn(250))
-		time.Sleep(time.Millisecond * amt)
 	}
 }
 
@@ -116,6 +116,7 @@ func getUserPosts(reqURL string, id int) {
 		log.Fatal("Error reading request. ", err1)
 	}
 	defer resp.Body.Close()
+	defer wg.Done()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	if err2 != nil {
 		log.Fatal("Error reading response. ", err2)
@@ -124,19 +125,17 @@ func getUserPosts(reqURL string, id int) {
 	json.Unmarshal(body, &posts)
 	url2 := baseURL + "comments?postId="
 	for i := range posts {
+		wg.Add(1)
 		go posts[i].saveToDB()
-		amt := time.Duration(rand.Intn(250))
-		time.Sleep(time.Millisecond * amt)
+		wg.Add(1)
 		go getPostComments(url2, posts[i].ID)
-		time.Sleep(time.Millisecond * amt)
 	}	
 }
 
 func main() {
 	userID := 7
 	url := baseURL + "posts?userId="
+	wg.Add(1)
 	go getUserPosts(url, userID)
-	amt2 := time.Duration(5)
-	time.Sleep(time.Second * amt2)
-	// fmt.Println("-----------------------exit--------------------")
+	wg.Wait()
 }

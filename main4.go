@@ -35,7 +35,5 @@ func main() {
 		wg.Add(1)
 		go printPost(url, i)
 	}
-    fmt.Println("Start wait")
-	wg.Wait()
-    fmt.Println("End wait")
+    wg.Wait()
 }
